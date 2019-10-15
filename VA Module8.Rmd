@@ -1,0 +1,66 @@
+---
+title: "Visual Analytics Module 8 - Correlation Analysis"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE}
+library(reshape2)
+library(ggplot2)
+```
+
+For this visual correlation analysis, I will be using the 'mtcars' dataset provided in R.
+We begin by first creating a correlation matrix of the dataset to give an idea of what our correlation visualizations should look like. After that we melt the data in order to visualize each of the data columns/rows, make it simpler and to help remove redundancy for later. For example, we only need the correlation of MPG to CYL, and not CYL to MPG as well, and then we begin constructing our correlation visualizations.
+
+```{r}
+mtcars_cor = round(cor(mtcars),2)
+head(mtcars_cor)
+
+melted_mtcars = melt(mtcars_cor)
+head(melted_mtcars)
+```
+
+```{r}
+p1 = ggplot(data = melted_mtcars, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile()
+
+p1
+```
+
+The first graph here shows a simple visualization of a correlation matrix, with the most significant correlation (1.0) being a light blue, no correlation (0.0) being regular/dark blue, and a negative correlation (-1.0) being black. While this graph does a good job at quickly displaying correlation, it is not exactly nice to look at and it still has redundancy which would make it look better if disappeared. 
+
+I used the function below to cut half of the data off the correlation matrix and list it as "NA".
+
+```{r}
+cuthalf = function(cuthalf){
+    cuthalf[upper.tri(cuthalf)]<- NA
+    return(cuthalf)
+}
+
+halfmtcars = cuthalf(mtcars_cor)
+halfmtcars
+```
+After again melting the graph, if we were to now construct the same graph, it would look much neater and simpler.
+
+```{r}
+melted_mtcars = melt(halfmtcars,na.rm=TRUE)
+
+p2 = ggplot(data = melted_mtcars, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile()
+p2
+```
+
+Now that the graph is simplified and redundancy is gone, we can clean it up and make it look neater/more visually appealing.
+
+```{r}
+p3 = ggplot(data = melted_mtcars, aes(x=Var1, y=Var2, fill=value)) + 
+geom_tile(color="white")+scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+midpoint = 0, limit = c(-1,1), space = "Lab", 
+name="Pearson\nCorrelation") + theme(axis.title.x = element_blank(),axis.title.y = element_blank())+ geom_text(aes(Var1, Var2, label = value), color = "black", size = 4)
+p3
+```
+
+We now have a clear, descriptive and visually appealing correlation graph that is easy to look at and understand. 
